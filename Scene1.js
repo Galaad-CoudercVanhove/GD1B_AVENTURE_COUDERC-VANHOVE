@@ -9,12 +9,12 @@ class Scene1 extends Phaser.Scene{
     init(data){
     }
     preload(){   
-        this.load.tilemapTiledJSON('map', 'map.json');
+        this.load.tilemapTiledJSON('map1', 'map.json');
         this.load.image('tiles', 'assets/landscape_tiles.png');
         this.load.image('player', 'assets/star.png');
     }
     create(){
-        const map = this.make.tilemap({key: 'map'});
+        const map = this.make.tilemap({key: 'map1'});
         const tileset = map.addTilesetImage('landscape', 'tiles');
         
         map.createStaticLayer('ground', tileset, 0, 0);
