@@ -9,7 +9,7 @@ class Scene1 extends Phaser.Scene{
     init(data){
     }
     preload(){   
-        this.load.tilemapTiledJSON('map1', 'map.json');
+        this.load.tilemapTiledJSON('map1', 'assets/map.json');
         this.load.image('tiles', 'assets/landscape_tiles.png');
         this.load.image('player', 'assets/star.png');
     }
