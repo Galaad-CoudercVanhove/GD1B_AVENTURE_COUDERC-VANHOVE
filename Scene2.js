@@ -4,12 +4,12 @@ var wallLayer;
 
 class Scene2 extends Phaser.Scene{
     constructor(){
-        super("Scene1");
+        super("Scene2");
     }
     init(data){
     }
     preload(){   
-        this.load.tilemapTiledJSON('map2', 'map2.json');
+        this.load.tilemapTiledJSON('map2', 'assets/map2.json');
         this.load.image('tiles', 'assets/landscape_tiles.png');
         this.load.image('player', 'assets/star.png');
     }
