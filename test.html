@@ -53,9 +53,10 @@ var game = new Phaser.Game(config);
 
 function preload ()
 {
-    this.load.tilemapTiledJSON('map1', 'assets/map3.json');
+    this.load.tilemapTiledJSON('map1', 'assets/map.json');
     this.load.image('tiles', 'assets/landscape_tiles.png');
     this.load.image('arbres', 'assets/arbre.png');
+    this.load.image('sol', 'assets/tileset.png');
     this.load.image('clef', 'assets/key.png');
     this.load.image('bomb', 'assets/bomb.png');
     this.load.image('bullet', 'assets/bullet.png');
@@ -71,8 +72,10 @@ function create ()
     const map = this.make.tilemap({key: 'map1'});
     const tileset = map.addTilesetImage('landscape', 'tiles');
     const tileset2 = map.addTilesetImage('arbres', 'arbres');
+    const tileset3 = map.addTilesetImage('tileset', 'sol');
     
-    map.createLayer('ground', tileset, 0, 0);
+    map.createLayer('ground', tileset3, 0, 0);
+    map.createLayer('ground2', tileset3, 0, 0);
     map.createLayer('trees', tileset2, 0, 0)
     .setDepth(5);
     wallLayer = map.createLayer('mur', tileset, 0, 0);
