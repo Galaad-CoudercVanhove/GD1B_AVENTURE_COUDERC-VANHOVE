@@ -48,14 +48,16 @@ var bullet;
 var bullets;
 var direction = true;
 var bulletActive = false;
+var house;
 
 var game = new Phaser.Game(config);
 
 function preload ()
 {
-    this.load.tilemapTiledJSON('map1', 'assets/map.json');
+    this.load.tilemapTiledJSON('map1', 'assets/map3.json');
     this.load.image('tiles', 'assets/landscape_tiles.png');
     this.load.image('arbres', 'assets/arbre.png');
+    this.load.image('maisons', 'assets/maison.png');
     this.load.image('sol', 'assets/tileset.png');
     this.load.image('clef', 'assets/key.png');
     this.load.image('bomb', 'assets/bomb.png');
@@ -73,16 +75,21 @@ function create ()
     const tileset = map.addTilesetImage('landscape', 'tiles');
     const tileset2 = map.addTilesetImage('arbres', 'arbres');
     const tileset3 = map.addTilesetImage('tileset', 'sol');
+    const tileset4 = map.addTilesetImage('maisons', 'maisons');
     
     map.createLayer('ground', tileset3, 0, 0);
     map.createLayer('ground2', tileset3, 0, 0);
     map.createLayer('trees', tileset2, 0, 0)
     .setDepth(5);
+    map.createLayer('roof', tileset4, 0, 0)
+    .setDepth(5);
     wallLayer = map.createLayer('mur', tileset, 0, 0);
     tree = map.createLayer('tronc', tileset2, 0, 0);
+    house = map.createLayer('houses', tileset4, 0, 0);
 
     wallLayer.setCollisionByExclusion(-1, true);
     tree.setCollisionByExclusion(-1, true);
+    house.setCollisionByExclusion(-1, true);
 
     const doorObjects = map.getObjectLayer('door').objects;
     Door = this.physics.add.group({immovable:true});
@@ -165,6 +172,7 @@ function create ()
     //  Collide the player and the stars with the platforms
     this.physics.add.collider(player, wallLayer);
     this.physics.add.collider(player, tree);
+    this.physics.add.collider(player, house);
     this.physics.add.collider(monster, wallLayer);
     this.physics.add.collider(cle, platforms);
     this.physics.add.collider(bombs, platforms);
@@ -261,6 +269,7 @@ function update ()
         bulletActive = true;
 
         if(direction === false){
+            bullet.setFlipX(true);
             bullet.setVelocityX(-450);
         }
         else{
