@@ -40,7 +40,7 @@ var cursors;
 var gameOver = false;
 var wallLayer;
 var monster;
-var doorLayer;
+var Door;
 var cle;
 var haskey = false;
 
@@ -48,11 +48,12 @@ var game = new Phaser.Game(config);
 
 function preload ()
 {
-    this.load.tilemapTiledJSON('map1', 'assets/map.json');
+    this.load.tilemapTiledJSON('map1', 'assets/map2.json');
     this.load.image('tiles', 'assets/landscape_tiles.png');
     this.load.image('clef', 'assets/star.png');
     this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude2.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('door', 'assets/porte.png');
+    this.load.spritesheet('dude', 'assets/dude3.png', { frameWidth: 32, frameHeight: 60 });
     this.load.spritesheet('monster', 'assets/monster.png', { frameWidth: 100, frameHeight: 50 });
 }
 
@@ -65,11 +66,15 @@ function create ()
         
     map.createStaticLayer('ground', tileset, 0, 0);
     wallLayer = map.createStaticLayer('mur', tileset, 0, 0);
-    doorLayer = map.createStaticLayer('door', tileset, 0, 0);
 
     wallLayer.setCollisionByExclusion(-1, true);
-    doorLayer.setCollisionByExclusion(-1, true);
 
+    const doorObjects = map.getObjectLayer('door').objects;
+    Door = this.physics.add.group({immovable:true});
+    for (const porte of doorObjects){
+        Door.create(porte.x, porte.y, 'door')
+    }
+    
     // The monster and its settings
     monster = this.physics.add.sprite(500, 300, 'monster');
 
@@ -143,14 +148,14 @@ function create ()
 
     //  Collide the player and the stars with the platforms
     this.physics.add.collider(player, wallLayer);
-    this.physics.add.collider(player, doorLayer);
     this.physics.add.collider(monster, wallLayer);
     this.physics.add.collider(cle, platforms);
     this.physics.add.collider(bombs, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     this.physics.add.overlap(player, cle, collectkey, null, this);
-    this.physics.add.overlap(player, doorLayer, openDoor);
+    this.physics.add.overlap(player, monster, hitMonster, null, this);
+    this.physics.add.collider(player, Door, openDoor);
 
     //this.physics.add.collider(player, bombs, hitBomb, null, this);
 
@@ -231,15 +236,15 @@ function collectkey (player, clef)
     haskey = true;
 }
 
-function openDoor (player, doorLayer)
+function openDoor (player, Door)
 {
-    if (haskey === true)
+    if (haskey == true)
     {
-        doorLayer.destroy();
+        Door.destroy();
     }
 }
 
-/*function hitBomb (player, bomb)
+function hitMonster (player,monster)
 {
     this.physics.pause();
 
@@ -248,7 +253,7 @@ function openDoor (player, doorLayer)
     player.anims.play('turn');
 
     gameOver = true;
-}*/
+}
 
 </script>
 
