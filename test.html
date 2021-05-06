@@ -39,19 +39,26 @@ var platforms;
 var cursors;
 var gameOver = false;
 var wallLayer;
+var tree;
 var monster;
 var Door;
 var cle;
 var haskey = false;
+var bullet;
+var bullets;
+var direction = true;
+var bulletActive = false;
 
 var game = new Phaser.Game(config);
 
 function preload ()
 {
-    this.load.tilemapTiledJSON('map1', 'assets/map2.json');
+    this.load.tilemapTiledJSON('map1', 'assets/map3.json');
     this.load.image('tiles', 'assets/landscape_tiles.png');
+    this.load.image('arbres', 'assets/arbre.png');
     this.load.image('clef', 'assets/key.png');
     this.load.image('bomb', 'assets/bomb.png');
+    this.load.image('bullet', 'assets/bullet.png');
     this.load.image('door', 'assets/porte.png');
     this.load.spritesheet('dude', 'assets/dude3.png', { frameWidth: 32, frameHeight: 60 });
     this.load.spritesheet('monster', 'assets/monster.png', { frameWidth: 100, frameHeight: 50 });
@@ -63,16 +70,21 @@ function create ()
 
     const map = this.make.tilemap({key: 'map1'});
     const tileset = map.addTilesetImage('landscape', 'tiles');
-        
-    map.createStaticLayer('ground', tileset, 0, 0);
-    wallLayer = map.createStaticLayer('mur', tileset, 0, 0);
+    const tileset2 = map.addTilesetImage('arbres', 'arbres');
+    
+    map.createLayer('ground', tileset, 0, 0);
+    map.createLayer('trees', tileset2, 0, 0)
+    .setDepth(5);
+    wallLayer = map.createLayer('mur', tileset, 0, 0);
+    tree = map.createLayer('tronc', tileset2, 0, 0);
 
     wallLayer.setCollisionByExclusion(-1, true);
+    tree.setCollisionByExclusion(-1, true);
 
     const doorObjects = map.getObjectLayer('door').objects;
     Door = this.physics.add.group({immovable:true});
     for (const porte of doorObjects){
-        Door.create(porte.x, porte.y, 'door')
+        Door.create(porte.x+15, porte.y+16, 'door')
     }
     
     // The monster and its settings
@@ -145,9 +157,11 @@ function create ()
     });
 
     bombs = this.physics.add.group();
+    bullets = this.physics.add.group();
 
     //  Collide the player and the stars with the platforms
     this.physics.add.collider(player, wallLayer);
+    this.physics.add.collider(player, tree);
     this.physics.add.collider(monster, wallLayer);
     this.physics.add.collider(cle, platforms);
     this.physics.add.collider(bombs, platforms);
@@ -158,9 +172,13 @@ function create ()
     this.physics.add.collider(player, Door, openDoor);
 
     //this.physics.add.collider(player, bombs, hitBomb, null, this);
+    this.physics.add.collider(bullets, wallLayer, hitwalls, null, this);
+    this.physics.add.collider(bullets, Door, hitdoor, null, this);
+    //this.physics.add.collider(monster, bullets, hitmonster, null, this);
 
     //follow caméra
     this.cameras.main.startFollow(player, true, 0.05, 0.05);
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 }
 
 function update ()
@@ -175,12 +193,16 @@ function update ()
         player.setVelocityX(-160);
 
         player.anims.play('left', true);
+
+        direction = false;
     }
     else if (cursors.right.isDown)
     {
         player.setVelocityX(160);
 
         player.anims.play('right', true);
+
+        direction = true;
     }
     else
     {
@@ -228,6 +250,21 @@ function update ()
         monster.anims.play("monsterMove", true);
     }
 
+    const justSpaceDown = Phaser.Input.Keyboard.JustDown(cursors.space)
+
+    if(justSpaceDown && bulletActive == false)
+    {
+        bullet = bullets.create(player.x,player.y,'bullet')
+        bulletActive = true;
+
+        if(direction === false){
+            bullet.setVelocityX(-450);
+        }
+        else{
+            bullet.setVelocityX(450);
+        }
+    }
+
 }
 
 function collectkey (player, clef)
@@ -254,6 +291,25 @@ function hitMonster (player,monster)
 
     gameOver = true;
 }
+
+function hitwalls (bullet,wallLayer)
+{
+    bullet.destroy();       
+    bulletActive = false;
+}
+
+function hitdoor (bullet,Door)
+{
+    bullet.destroy();       
+    bulletActive = false;
+}
+
+/*function hitmonster (monster,bullet)
+{
+    monster.destroy();
+    bullet.destroy();       
+    bulletActive = false;
+}*/
 
 </script>
 
