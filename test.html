@@ -2,7 +2,7 @@
 <html lang="en"> 
 <head> 
     <meta charset="UTF-8" />
-    <title>test</title>
+    <title>ZeldaLike</title>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.54.0/dist/phaser.js"></script>
     <style type="text/css">
         body {
@@ -34,8 +34,6 @@ var config = {
 
 var player;
 var stars;
-var bombs;
-var platforms;
 var cursors;
 var gameOver = false;
 var wallLayer;
@@ -54,17 +52,17 @@ var game = new Phaser.Game(config);
 
 function preload ()
 {
-    this.load.tilemapTiledJSON('map1', 'assets/map3.json');
+    this.load.tilemapTiledJSON('map1', 'assets/map2.json');
     this.load.image('tiles', 'assets/landscape_tiles.png');
     this.load.image('arbres', 'assets/arbre.png');
     this.load.image('maisons', 'assets/maison.png');
     this.load.image('sol', 'assets/tileset.png');
     this.load.image('clef', 'assets/key.png');
-    this.load.image('bomb', 'assets/bomb.png');
     this.load.image('bullet', 'assets/bullet.png');
     this.load.image('door', 'assets/porte.png');
-    this.load.spritesheet('dude', 'assets/dude3.png', { frameWidth: 32, frameHeight: 60 });
-    this.load.spritesheet('monster', 'assets/monster.png', { frameWidth: 100, frameHeight: 50 });
+    //this.load.spritesheet('dude', 'assets/dude3.png', { frameWidth: 32, frameHeight: 60 });
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 34, frameHeight: 48 });
+    this.load.spritesheet('monster', 'assets/monster2.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create ()
@@ -98,12 +96,14 @@ function create ()
     }
     
     // The monster and its settings
-    monster = this.physics.add.sprite(500, 300, 'monster');
+    monster = this.physics.add.sprite(500, 350, 'monster');
+    monster2 = this.physics.add.sprite(500, 900, 'monster');
+    monster3 = this.physics.add.sprite(500, 1100, 'monster');
 
     // The player and its settings
     player = this.physics.add.sprite(100, 450, 'dude');
 
-    //  Our player animations, turning, walking left and walking right.
+    //  Our player animations
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -144,8 +144,8 @@ function create ()
 
     this.anims.create({
         key: 'monsterMove',
-        frames: this.anims.generateFrameNumbers('monster', { start: 0, end: 2 }),
-        frameRate: 10,
+        frames: this.anims.generateFrameNumbers('monster', { start: 0, end: 5 }),
+        frameRate: 5,
         repeat: -1
     });
 
@@ -156,7 +156,7 @@ function create ()
     //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
     cle = this.physics.add.group({
         key: 'clef',
-        setXY: { x: 500, y: 80, stepX: 70 }
+        setXY: { x: 1200, y: 1100, stepX: 70 }
     });
 
     cle.children.iterate(function (child) {
@@ -166,26 +166,30 @@ function create ()
 
     });
 
-    bombs = this.physics.add.group();
     bullets = this.physics.add.group();
 
-    //  Collide the player and the stars with the platforms
+    //  Colliders
     this.physics.add.collider(player, wallLayer);
     this.physics.add.collider(player, tree);
     this.physics.add.collider(player, house);
     this.physics.add.collider(monster, wallLayer);
-    this.physics.add.collider(cle, platforms);
-    this.physics.add.collider(bombs, platforms);
+    this.physics.add.collider(monster, house);
+    this.physics.add.collider(monster, tree);
+    this.physics.add.collider(monster2, wallLayer);
+    this.physics.add.collider(monster2, house);
+    this.physics.add.collider(monster2, tree);
+    this.physics.add.collider(monster3, wallLayer);
+    this.physics.add.collider(monster3, house);
+    this.physics.add.collider(monster3, tree);
 
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    //  Overlaps et colliders
     this.physics.add.overlap(player, cle, collectkey, null, this);
     this.physics.add.overlap(player, monster, hitMonster, null, this);
     this.physics.add.collider(player, Door, openDoor);
 
-    //this.physics.add.collider(player, bombs, hitBomb, null, this);
     this.physics.add.collider(bullets, wallLayer, hitwalls, null, this);
     this.physics.add.collider(bullets, Door, hitdoor, null, this);
-    //this.physics.add.collider(monster, bullets, hitmonster, null, this);
+    this.physics.add.collider(bullets, monster, hitmonster, null, this);
 
     //follow caméra
     this.cameras.main.startFollow(player, true, 0.05, 0.05);
@@ -226,13 +230,13 @@ function update ()
     {
         player.setVelocityY(-160);
 
-        player.anims.play('up');
+        player.anims.play('up', true);
     }
     else if (cursors.down.isDown)
     {
         player.setVelocityY(160);
 
-        player.anims.play('down');
+        player.anims.play('down', true);
     }
     else if (cursors.up.isUp && cursors.down.isUp){
         player.setVelocityY(0);
@@ -251,14 +255,60 @@ function update ()
     }
 
     if (monster.direction === 'RIGHT') {
-        monster.setVelocityX(100);
+        monster.setVelocityX(60);
         monster.setFlipX(false);
         monster.anims.play("monsterMove", true);
     }
     else{
-        monster.setVelocityX(-100);
+        monster.setVelocityX(-60);
         monster.setFlipX(true);
         monster.anims.play("monsterMove", true);
+    }
+
+    ///////////////////////////////////////
+    // déplacements monstre 2
+    ///////////////////////////////////////
+
+    if (monster.body.blocked.right) {
+        monster2.direction = 'LEFT';
+    }
+
+    if (monster2.body.blocked.left) {
+        monster2.direction = 'RIGHT';
+    }
+
+    if (monster2.direction === 'RIGHT') {
+        monster2.setVelocityX(60);
+        monster2.setFlipX(false);
+        monster2.anims.play("monsterMove", true);
+    }
+    else{
+        monster2.setVelocityX(-60);
+        monster2.setFlipX(true);
+        monster2.anims.play("monsterMove", true);
+    }
+
+    ///////////////////////////////////////
+    // déplacements monstre 3
+    ///////////////////////////////////////
+
+    if (monster.body.blocked.right) {
+        monster3.direction = 'LEFT';
+    }
+
+    if (monster3.body.blocked.left) {
+        monster3.direction = 'RIGHT';
+    }
+
+    if (monster3.direction === 'RIGHT') {
+        monster3.setVelocityX(60);
+        monster3.setFlipX(false);
+        monster3.anims.play("monsterMove", true);
+    }
+    else{
+        monster3.setVelocityX(-60);
+        monster3.setFlipX(true);
+        monster3.anims.play("monsterMove", true);
     }
 
     const justSpaceDown = Phaser.Input.Keyboard.JustDown(cursors.space)
@@ -316,12 +366,12 @@ function hitdoor (bullet,Door)
     bulletActive = false;
 }
 
-/*function hitmonster (monster,bullet)
+function hitmonster (bullet,monster)
 {
     monster.destroy();
     bullet.destroy();       
     bulletActive = false;
-}*/
+}
 
 </script>
 
