@@ -55,7 +55,8 @@ var coeur3;
 var invincible = false;
 var compteur = 60;
 var paddle;
-var padConnected; 
+var padConnected;
+var menu ; 
 
 var game = new Phaser.Game(config);
 
@@ -64,6 +65,7 @@ function preload ()
     this.load.tilemapTiledJSON('map1', 'assets/map2.json');
     this.load.image('tiles', 'assets/landscape_tiles.png');
     this.load.image('arbres', 'assets/arbre.png');
+    this.load.image('menu', 'assets/menu.png');
     this.load.image('maisons', 'assets/maison.png');
     this.load.image('sol', 'assets/tileset.png');
     this.load.image('clef', 'assets/key.png');
@@ -80,6 +82,10 @@ function preload ()
 function create ()
 {
 
+
+    menu = this.add.image(640,360, 'menu')
+    .setDepth(9)
+    .setScrollFactor(0);
 
     const map = this.make.tilemap({key: 'map1'});
     const tileset = map.addTilesetImage('landscape', 'tiles');
@@ -210,6 +216,10 @@ function create ()
 
 function update ()
 {
+    this.input.on('pointerdown', function (pointer) {
+        menu.destroy();
+    })
+
     this.input.gamepad.once('connected', function (pad) {
         paddle = pad;
         padConnected = true;
@@ -375,7 +385,7 @@ function update ()
     if(vie === 3)
     {
         coeur3 = this.add.image(120, 35,'coeur3') 
-            .setDepth(1)
+            .setDepth(8)
             .setScrollFactor(0);
     }
     if (vie === 2)
@@ -383,14 +393,14 @@ function update ()
         coeur3.destroy();
         
         coeur2=this.add.image(120, 35,'coeur2') 
-            .setDepth(1)
+            .setDepth(8)
             .setScrollFactor(0);
     }
     if(vie === 1){
         coeur2.destroy();
 
         coeur1=this.add.image(120, 35,'coeur1') 
-            .setDepth(1)
+            .setDepth(8)
             .setScrollFactor(0);
     }
 
@@ -437,7 +447,7 @@ function mourir ()
         coeur1.destroy();
 
         coeur0=this.add.image(120, 35,'coeur0') 
-            .setDepth(1)
+            .setDepth(8)
             .setScrollFactor(0);
     }
 }
