@@ -60,7 +60,6 @@ function preload ()
     this.load.image('clef', 'assets/key.png');
     this.load.image('bullet', 'assets/bullet.png');
     this.load.image('door', 'assets/porte.png');
-    //this.load.spritesheet('dude', 'assets/dude3.png', { frameWidth: 32, frameHeight: 60 });
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 34, frameHeight: 48 });
     this.load.spritesheet('monster', 'assets/monster2.png', { frameWidth: 32, frameHeight: 48 });
 }
@@ -246,11 +245,11 @@ function update ()
     // déplacements monstre 1
     ///////////////////////////////////////
 
-    if (monster.body.blocked.right) {
+    if (monster.x >= 800) {
         monster.direction = 'LEFT';
     }
 
-    if (monster.body.blocked.left) {
+    if (monster.x <= 200) {
         monster.direction = 'RIGHT';
     }
 
@@ -269,11 +268,11 @@ function update ()
     // déplacements monstre 2
     ///////////////////////////////////////
 
-    if (monster.body.blocked.right) {
+    if (monster2.x >= 900) {
         monster2.direction = 'LEFT';
     }
 
-    if (monster2.body.blocked.left) {
+    if (monster2.x <= 300) {
         monster2.direction = 'RIGHT';
     }
 
@@ -292,11 +291,11 @@ function update ()
     // déplacements monstre 3
     ///////////////////////////////////////
 
-    if (monster.body.blocked.right) {
+    if (monster3.x >= 1250) {
         monster3.direction = 'LEFT';
     }
 
-    if (monster3.body.blocked.left) {
+    if (monster3.x <= 400) {
         monster3.direction = 'RIGHT';
     }
 
