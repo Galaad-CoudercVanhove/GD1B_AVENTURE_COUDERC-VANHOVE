@@ -25,6 +25,7 @@ var config = {
             debug: false
         }
     },
+    input : {gamepad:true},
     scene: {
         preload: preload,
         create: create,
@@ -53,6 +54,8 @@ var coeur2;
 var coeur3;
 var invincible = false;
 var compteur = 60;
+var paddle;
+var padConnected; 
 
 var game = new Phaser.Game(config);
 
@@ -207,6 +210,11 @@ function create ()
 
 function update ()
 {
+    this.input.gamepad.once('connected', function (pad) {
+        paddle = pad;
+        padConnected = true;
+    });
+
     if (gameOver)
     {
         return;
@@ -250,6 +258,46 @@ function update ()
     else if (cursors.up.isUp && cursors.down.isUp){
         player.setVelocityY(0);
     }
+
+    // pad
+
+/*    if(padConnected){
+       
+       if (paddle.left)
+       {
+        player.setVelocityX(-160);
+
+        player.anims.play('left', true);
+
+        direction = false;
+       }
+       else if (paddle.right)
+       {
+        player.setVelocityX(160);
+
+        player.anims.play('right', true);
+
+        direction = true;
+       }
+       else
+       {
+           player.setVelocityX(0);
+
+       }
+
+       if (paddle.down)
+       {
+           player.setVelocityY(160);
+
+           player.anims.play('down', true);
+       }
+
+       if (paddle.up)
+       {
+           player.setVelocityY(160);
+
+           player.anims.play('down', true);
+       }*/
 
     ///////////////////////////////////////
     // déplacements monstre 1
