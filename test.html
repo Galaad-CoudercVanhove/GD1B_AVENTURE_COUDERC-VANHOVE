@@ -47,6 +47,12 @@ var bullets;
 var direction = true;
 var bulletActive = false;
 var house;
+var vie = 3;
+var coeur1;
+var coeur2;
+var coeur3;
+var invincible = false;
+var compteur = 60;
 
 var game = new Phaser.Game(config);
 
@@ -62,6 +68,10 @@ function preload ()
     this.load.image('door', 'assets/porte.png');
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 34, frameHeight: 48 });
     this.load.spritesheet('monster', 'assets/monster2.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('coeur0', 'assets/coeur1.png');
+    this.load.image('coeur1', 'assets/coeur1.png');
+    this.load.image('coeur2', 'assets/coeur2.png');
+    this.load.image('coeur3', 'assets/coeur3.png');
 }
 
 function create ()
@@ -188,7 +198,7 @@ function create ()
 
     this.physics.add.collider(bullets, wallLayer, hitwalls, null, this);
     this.physics.add.collider(bullets, Door, hitdoor, null, this);
-    this.physics.add.collider(bullets, monster, hitmonster, null, this);
+    //this.physics.add.collider(bullets, monster, hitmonster, null, this);
 
     //follow caméra
     this.cameras.main.startFollow(player, true, 0.05, 0.05);
@@ -310,6 +320,32 @@ function update ()
         monster3.anims.play("monsterMove", true);
     }
 
+    ////////////////////////////////////////////
+    // Les coeurs de vie
+    ////////////////////////////////////////////
+
+    if(vie === 3)
+    {
+        coeur3 = this.add.image(120, 35,'coeur3') 
+            .setDepth(1)
+            .setScrollFactor(0);
+    }
+    if (vie === 2)
+    {
+        coeur3.destroy();
+        
+        coeur2=this.add.image(120, 35,'coeur2') 
+            .setDepth(1)
+            .setScrollFactor(0);
+    }
+    if(vie === 1){
+        coeur2.destroy();
+
+        coeur1=this.add.image(120, 35,'coeur1') 
+            .setDepth(1)
+            .setScrollFactor(0);
+    }
+
     const justSpaceDown = Phaser.Input.Keyboard.JustDown(cursors.space)
 
     if(justSpaceDown && bulletActive == false)
@@ -326,6 +362,36 @@ function update ()
         }
     }
 
+    ////////Invincibility///////////////////////////
+    if(invincible == true){
+        compteur-- ;
+        if(compteur == 0){
+            compteur = 60;
+            player.setTint(0xffffff);
+            invincible = false ;
+        }
+    }
+
+}
+
+//////////////////////////////////////
+// mort par les monstres
+//////////////////////////////////////
+
+function mourir ()
+{
+    if (vie === 0){
+        gameOver = true;
+        this.physics.pause();
+        player.setTint(0xff0000);
+        player.anims.play('turn');
+
+        coeur1.destroy();
+
+        coeur0=this.add.image(120, 35,'coeur0') 
+            .setDepth(1)
+            .setScrollFactor(0);
+    }
 }
 
 function collectkey (player, clef)
@@ -344,13 +410,8 @@ function openDoor (player, Door)
 
 function hitMonster (player,monster)
 {
-    this.physics.pause();
-
-    player.setTint(0xff0000);
-
-    player.anims.play('turn');
-
-    gameOver = true;
+    vie--;
+    invincible = true;
 }
 
 function hitwalls (bullet,wallLayer)
@@ -365,12 +426,12 @@ function hitdoor (bullet,Door)
     bulletActive = false;
 }
 
-function hitmonster (bullet,monster)
+/*function hitmonster (bullet,monster)
 {
     monster.destroy();
     bullet.destroy();       
     bulletActive = false;
-}
+}*/
 
 </script>
 
