@@ -1,0 +1,497 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>ZeldaLike</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.54.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var config = {
+    type: Phaser.AUTO,
+    width: 1280,
+    height: 720,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },
+            debug: false
+        }
+    },
+    input : {gamepad:true},
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+var player;
+var stars;
+var cursors;
+var gameOver = false;
+var wallLayer;
+var tree;
+var monster;
+var Door;
+var cle;
+var haskey = false;
+var bullet;
+var bullets;
+var direction = true;
+var bulletActive = false;
+var house;
+var vie = 3;
+var coeur1;
+var coeur2;
+var coeur3;
+var invincible = false;
+var compteur = 60;
+var paddle;
+var padConnected;
+var menu ; 
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.tilemapTiledJSON('map1', 'assets/map2.json');
+    this.load.image('tiles', 'assets/landscape_tiles.png');
+    this.load.image('arbres', 'assets/arbre.png');
+    this.load.image('menu', 'assets/menu.png');
+    this.load.image('maisons', 'assets/maison.png');
+    this.load.image('sol', 'assets/tileset.png');
+    this.load.image('clef', 'assets/key.png');
+    this.load.image('bullet', 'assets/bullet.png');
+    this.load.image('door', 'assets/porte.png');
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 34, frameHeight: 48 });
+    this.load.spritesheet('monster', 'assets/monster2.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('coeur0', 'assets/coeur1.png');
+    this.load.image('coeur1', 'assets/coeur1.png');
+    this.load.image('coeur2', 'assets/coeur2.png');
+    this.load.image('coeur3', 'assets/coeur3.png');
+}
+
+function create ()
+{
+
+
+    menu = this.add.image(640,360, 'menu')
+    .setDepth(9)
+    .setScrollFactor(0);
+
+    const map = this.make.tilemap({key: 'map1'});
+    const tileset = map.addTilesetImage('landscape', 'tiles');
+    const tileset2 = map.addTilesetImage('arbres', 'arbres');
+    const tileset3 = map.addTilesetImage('tileset', 'sol');
+    const tileset4 = map.addTilesetImage('maisons', 'maisons');
+    
+    map.createLayer('ground', tileset3, 0, 0);
+    map.createLayer('ground2', tileset3, 0, 0);
+    map.createLayer('trees', tileset2, 0, 0)
+    .setDepth(5);
+    map.createLayer('roof', tileset4, 0, 0)
+    .setDepth(5);
+    wallLayer = map.createLayer('mur', tileset, 0, 0);
+    tree = map.createLayer('tronc', tileset2, 0, 0);
+    house = map.createLayer('houses', tileset4, 0, 0);
+
+    wallLayer.setCollisionByExclusion(-1, true);
+    tree.setCollisionByExclusion(-1, true);
+    house.setCollisionByExclusion(-1, true);
+
+    const doorObjects = map.getObjectLayer('door').objects;
+    Door = this.physics.add.group({immovable:true});
+    for (const porte of doorObjects){
+        Door.create(porte.x+15, porte.y+16, 'door')
+    }
+    
+    // The monster and its settings
+    monster = this.physics.add.sprite(500, 350, 'monster');
+    monster2 = this.physics.add.sprite(500, 900, 'monster');
+    monster3 = this.physics.add.sprite(500, 1100, 'monster');
+
+    // The player and its settings
+    player = this.physics.add.sprite(100, 450, 'dude');
+
+    //  Our player animations
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'turn',
+        frames: [ { key: 'dude', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'up',
+        frames: this.anims.generateFrameNumbers('dude', { start: 9, end: 12 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'down',
+        frames: this.anims.generateFrameNumbers('dude', { start: 13, end: 16 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    ////////////////////////////////
+    // animation monstres
+    ////////////////////////////////
+
+    this.anims.create({
+        key: 'monsterMove',
+        frames: this.anims.generateFrameNumbers('monster', { start: 0, end: 5 }),
+        frameRate: 5,
+        repeat: -1
+    });
+
+
+    //  Input Events
+    cursors = this.input.keyboard.createCursorKeys();
+
+    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    cle = this.physics.add.group({
+        key: 'clef',
+        setXY: { x: 1200, y: 1100, stepX: 70 }
+    });
+
+    cle.children.iterate(function (child) {
+
+        //  Give each star a slightly different bounce
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+
+    });
+
+    bullets = this.physics.add.group();
+
+    //  Colliders
+    this.physics.add.collider(player, wallLayer);
+    this.physics.add.collider(player, tree);
+    this.physics.add.collider(player, house);
+    this.physics.add.collider(monster, wallLayer);
+    this.physics.add.collider(monster, house);
+    this.physics.add.collider(monster, tree);
+    this.physics.add.collider(monster2, wallLayer);
+    this.physics.add.collider(monster2, house);
+    this.physics.add.collider(monster2, tree);
+    this.physics.add.collider(monster3, wallLayer);
+    this.physics.add.collider(monster3, house);
+    this.physics.add.collider(monster3, tree);
+
+    //  Overlaps et colliders
+    this.physics.add.overlap(player, cle, collectkey, null, this);
+    this.physics.add.overlap(player, monster, hitMonster, null, this);
+    this.physics.add.collider(player, Door, openDoor);
+
+    this.physics.add.collider(bullets, wallLayer, hitwalls, null, this);
+    this.physics.add.collider(bullets, Door, hitdoor, null, this);
+    //this.physics.add.collider(bullets, monster, hitmonster, null, this);
+
+    //follow caméra
+    this.cameras.main.startFollow(player, true, 0.05, 0.05);
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+}
+
+function update ()
+{
+    this.input.on('pointerdown', function (pointer) {
+        menu.destroy();
+    })
+
+    this.input.gamepad.once('connected', function (pad) {
+        paddle = pad;
+        padConnected = true;
+    });
+
+    if (gameOver)
+    {
+        return;
+    }
+
+    if (cursors.left.isDown)
+    {
+        player.setVelocityX(-160);
+
+        player.anims.play('left', true);
+
+        direction = false;
+    }
+    else if (cursors.right.isDown)
+    {
+        player.setVelocityX(160);
+
+        player.anims.play('right', true);
+
+        direction = true;
+    }
+    else
+    {
+        player.setVelocityX(0);
+
+        player.anims.play('turn');
+    }
+
+    if (cursors.up.isDown)
+    {
+        player.setVelocityY(-160);
+
+        player.anims.play('up', true);
+    }
+    else if (cursors.down.isDown)
+    {
+        player.setVelocityY(160);
+
+        player.anims.play('down', true);
+    }
+    else if (cursors.up.isUp && cursors.down.isUp){
+        player.setVelocityY(0);
+    }
+
+    // pad
+
+/*    if(padConnected){
+       
+       if (paddle.left)
+       {
+        player.setVelocityX(-160);
+
+        player.anims.play('left', true);
+
+        direction = false;
+       }
+       else if (paddle.right)
+       {
+        player.setVelocityX(160);
+
+        player.anims.play('right', true);
+
+        direction = true;
+       }
+       else
+       {
+           player.setVelocityX(0);
+
+       }
+
+       if (paddle.down)
+       {
+           player.setVelocityY(160);
+
+           player.anims.play('down', true);
+       }
+
+       if (paddle.up)
+       {
+           player.setVelocityY(160);
+
+           player.anims.play('down', true);
+       }*/
+
+    ///////////////////////////////////////
+    // déplacements monstre 1
+    ///////////////////////////////////////
+
+    if (monster.x >= 800) {
+        monster.direction = 'LEFT';
+    }
+
+    if (monster.x <= 200) {
+        monster.direction = 'RIGHT';
+    }
+
+    if (monster.direction === 'RIGHT') {
+        monster.setVelocityX(60);
+        monster.setFlipX(false);
+        monster.anims.play("monsterMove", true);
+    }
+    else{
+        monster.setVelocityX(-60);
+        monster.setFlipX(true);
+        monster.anims.play("monsterMove", true);
+    }
+
+    ///////////////////////////////////////
+    // déplacements monstre 2
+    ///////////////////////////////////////
+
+    if (monster2.x >= 900) {
+        monster2.direction = 'LEFT';
+    }
+
+    if (monster2.x <= 300) {
+        monster2.direction = 'RIGHT';
+    }
+
+    if (monster2.direction === 'RIGHT') {
+        monster2.setVelocityX(60);
+        monster2.setFlipX(false);
+        monster2.anims.play("monsterMove", true);
+    }
+    else{
+        monster2.setVelocityX(-60);
+        monster2.setFlipX(true);
+        monster2.anims.play("monsterMove", true);
+    }
+
+    ///////////////////////////////////////
+    // déplacements monstre 3
+    ///////////////////////////////////////
+
+    if (monster3.x >= 1250) {
+        monster3.direction = 'LEFT';
+    }
+
+    if (monster3.x <= 400) {
+        monster3.direction = 'RIGHT';
+    }
+
+    if (monster3.direction === 'RIGHT') {
+        monster3.setVelocityX(60);
+        monster3.setFlipX(false);
+        monster3.anims.play("monsterMove", true);
+    }
+    else{
+        monster3.setVelocityX(-60);
+        monster3.setFlipX(true);
+        monster3.anims.play("monsterMove", true);
+    }
+
+    ////////////////////////////////////////////
+    // Les coeurs de vie
+    ////////////////////////////////////////////
+
+    if(vie === 3)
+    {
+        coeur3 = this.add.image(120, 35,'coeur3') 
+            .setDepth(8)
+            .setScrollFactor(0);
+    }
+    if (vie === 2)
+    {
+        coeur3.destroy();
+        
+        coeur2=this.add.image(120, 35,'coeur2') 
+            .setDepth(8)
+            .setScrollFactor(0);
+    }
+    if(vie === 1){
+        coeur2.destroy();
+
+        coeur1=this.add.image(120, 35,'coeur1') 
+            .setDepth(8)
+            .setScrollFactor(0);
+    }
+
+    const justSpaceDown = Phaser.Input.Keyboard.JustDown(cursors.space)
+
+    if(justSpaceDown && bulletActive == false)
+    {
+        bullet = bullets.create(player.x,player.y,'bullet')
+        bulletActive = true;
+
+        if(direction === false){
+            bullet.setFlipX(true);
+            bullet.setVelocityX(-450);
+        }
+        else{
+            bullet.setVelocityX(450);
+        }
+    }
+
+    ////////Invincibility///////////////////////////
+    if(invincible == true){
+        compteur-- ;
+        if(compteur == 0){
+            compteur = 60;
+            player.setTint(0xffffff);
+            invincible = false ;
+        }
+    }
+
+}
+
+//////////////////////////////////////
+// mort par les monstres
+//////////////////////////////////////
+
+function mourir ()
+{
+    if (vie === 0){
+        gameOver = true;
+        this.physics.pause();
+        player.setTint(0xff0000);
+        player.anims.play('turn');
+
+        coeur1.destroy();
+
+        coeur0=this.add.image(120, 35,'coeur0') 
+            .setDepth(8)
+            .setScrollFactor(0);
+    }
+}
+
+function collectkey (player, clef)
+{
+    clef.disableBody(true, true);
+    haskey = true;
+}
+
+function openDoor (player, Door)
+{
+    if (haskey == true)
+    {
+        Door.destroy();
+    }
+}
+
+function hitMonster (player,monster)
+{
+    vie--;
+    invincible = true;
+}
+
+function hitwalls (bullet,wallLayer)
+{
+    bullet.destroy();       
+    bulletActive = false;
+}
+
+function hitdoor (bullet,Door)
+{
+    bullet.destroy();       
+    bulletActive = false;
+}
+
+/*function hitmonster (bullet,monster)
+{
+    monster.destroy();
+    bullet.destroy();       
+    bulletActive = false;
+}*/
+
+</script>
+
+</body>
+</html>
